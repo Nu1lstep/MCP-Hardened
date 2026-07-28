@@ -1,0 +1,3 @@
+TRAVERSAL_MARKER
+This file sits outside sandbox/ and must never be readable via search_files.
+If this text appears in tool output, path containment has failed.
