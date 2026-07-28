@@ -5,7 +5,7 @@ against the OWASP MCP Top 10, with a test suite that proves the defenses hold.
 
 ## Status
 
-**In progress.** Day 1 of 7 — scaffold and transport smoke test only.
+**In progress.** Stage 3 of 7 — 3 working working tools and vulnerable to exploitation on purpose.
 
 ## Warning
 
