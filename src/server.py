@@ -1,6 +1,7 @@
 import sqlite3
 from pathlib import Path
 
+import httpx
 from fastmcp import FastMCP
 
 mcp = FastMCP("hardened-demo")
@@ -14,6 +15,13 @@ LOCAL_READONLY = {
     "destructiveHint": False,
     "idempotentHint": True,
     "openWorldHint": False,
+}
+
+OPEN_READONLY = {
+    "readOnlyHint": True,
+    "destructiveHint": False,
+    "idempotentHint": True,
+    "openWorldHint": True,
 }
 
 
@@ -35,6 +43,11 @@ def _query_records(filter: str) -> str:
     )
 
 
+def _fetch_doc(url: str) -> str:
+    response = httpx.get(url, follow_redirects=True)
+    return response.text
+
+
 @mcp.tool(annotations=LOCAL_READONLY)
 def ping(message: str) -> str:
     """Echo a message back. Smoke test only."""
@@ -51,6 +64,12 @@ def search_files(query: str) -> str:
 def query_records(filter: str) -> str:
     """Look up records by category."""
     return _query_records(filter)
+
+
+@mcp.tool(annotations=OPEN_READONLY)
+def fetch_doc(url: str) -> str:
+    """Fetch the text of a document at a URL."""
+    return _fetch_doc(url)
 
 
 if __name__ == "__main__":
