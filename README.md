@@ -18,8 +18,6 @@ Do not use any commit from this repo as a reference implementation until the
 hardening commits land.
 
 ## ***WARNING***
-# mcp-hardened
-
 > **This repository contains intentionally vulnerable code.**
 > Commits tagged `naive-baseline` and earlier implement path traversal, SQL
 > injection, and SSRF **on purpose**, as the "before" half of a security
