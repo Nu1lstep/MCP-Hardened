@@ -36,6 +36,16 @@ Plus audit logging of every tool call and its arguments.
   from connecting to a poisoned server
 - Multi-user authentication, rate limiting
 
+- ***WARNING***
+# mcp-hardened
+
+> **This repository contains intentionally vulnerable code.**
+> Commits tagged `naive-baseline` and earlier implement path traversal, SQL
+> injection, and SSRF **on purpose**, as the "before" half of a security
+> demonstration. Do not use any code from this repository as a reference
+> implementation, and do not deploy it. It is a teaching artifact, not a
+> library.
+
 ## Stack
 
 Python 3.12 · FastMCP 3.3.1 · pytest · stdio transport
