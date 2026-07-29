@@ -37,7 +37,16 @@ Plus audit logging of every tool call and its arguments.
   from connecting to a poisoned server
 - Multi-user authentication, rate limiting
 
-
 ## Stack
 
 Python 3.12 · FastMCP 3.3.1 · pytest · stdio transport
+
+## Attribution
+
+Built with Claude Code. The implementation, threat model, and documentation in
+this repository were AI-generated.
+
+My contribution was direction and review: setting the scope, deciding what
+stays out of scope, approving or rejecting each step, and verifying behavior in
+the MCP Inspector at each stage.
+
