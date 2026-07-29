@@ -9,21 +9,14 @@ against the OWASP MCP Top 10, with a test suite that proves the defenses hold.
 
 ## Warning
 
-Early commits contain **intentionally vulnerable** implementations. The build
-order is deliberate: write the naive version, write attack tests that prove the
-vulnerability is reachable, then harden until the tests pass. A security test
-that has never failed is not a test.
-
-Do not use any commit from this repo as a reference implementation until the
-hardening commits land.
-
-## ***WARNING***
-> **This repository contains intentionally vulnerable code.**
-> Commits tagged `naive-baseline` and earlier implement path traversal, SQL
-> injection, and SSRF **on purpose**, as the "before" half of a security
-> demonstration. Do not use any code from this repository as a reference
-> implementation, and do not deploy it. It is a teaching artifact, not a
-> library.
+> **This repository contains intentionally vulnerable code.** Commits at and
+> before the `naive-baseline` tag implement path traversal, SQL injection, and
+> SSRF **on purpose** — they are the "before" half of a security demonstration.
+> The build order is deliberate: write the naive version, write attack tests
+> that prove the vulnerability is reachable, then harden until the tests pass.
+> A security test that has never failed is not a test. Do not use any code from
+> this repository as a reference implementation, and do not deploy it. This is
+> a teaching artifact, not a library.
 
 ## Planned scope
 
