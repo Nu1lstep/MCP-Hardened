@@ -17,6 +17,16 @@ that has never failed is not a test.
 Do not use any commit from this repo as a reference implementation until the
 hardening commits land.
 
+## ***WARNING***
+# mcp-hardened
+
+> **This repository contains intentionally vulnerable code.**
+> Commits tagged `naive-baseline` and earlier implement path traversal, SQL
+> injection, and SSRF **on purpose**, as the "before" half of a security
+> demonstration. Do not use any code from this repository as a reference
+> implementation, and do not deploy it. It is a teaching artifact, not a
+> library.
+
 ## Planned scope
 
 Three read-only tools, each hosting one vulnerability class:
@@ -36,15 +46,6 @@ Plus audit logging of every tool call and its arguments.
   from connecting to a poisoned server
 - Multi-user authentication, rate limiting
 
-- ***WARNING***
-# mcp-hardened
-
-> **This repository contains intentionally vulnerable code.**
-> Commits tagged `naive-baseline` and earlier implement path traversal, SQL
-> injection, and SSRF **on purpose**, as the "before" half of a security
-> demonstration. Do not use any code from this repository as a reference
-> implementation, and do not deploy it. It is a teaching artifact, not a
-> library.
 
 ## Stack
 
