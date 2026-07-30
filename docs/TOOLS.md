@@ -131,17 +131,26 @@ def _read_sandboxed(query: str) -> str:
 ### Tests
 
 ```python
-def test_traversal_rejected():
+# tests/test_attacks.py
+def test_search_files_relative_traversal_rejected():
     with pytest.raises(ValueError):
-        _read_sandboxed("../../.ssh/id_rsa")
+        _read_sandboxed("../OUTSIDE_SANDBOX.txt")
 
-def test_absolute_path_rejected():
+
+def test_search_files_absolute_path_rejected():
     with pytest.raises(ValueError):
         _read_sandboxed("/etc/passwd")
 
-def test_legitimate_read_succeeds():
-    assert "internal note" in _read_sandboxed("notes.txt")
+
+# tests/test_functional.py
+def test_search_files_reads_note():
+    result = _read_sandboxed("notes.txt")
+    assert "quarterly numbers" in result
 ```
+
+The traversal target is `OUTSIDE_SANDBOX.txt`, a marker file committed at the
+repository root, rather than a real key path — the assertion is about
+containment, and the test should not depend on the machine it runs on.
 
 The third test is not optional. Hardening that breaks the legitimate case is
 not hardening.
@@ -205,7 +214,7 @@ against a grammar with many equivalent encodings.
 def _query_records(filter: str) -> str:
     conn = sqlite3.connect("file:data/records.db?mode=ro", uri=True)
     rows = conn.execute(
-        "SELECT id, name, category FROM records WHERE category = ? LIMIT 100",
+        "SELECT id, name, category, note FROM records WHERE category = ? LIMIT 100",
         (filter,),
     ).fetchall()
     return "\n".join(str(r) for r in rows)
@@ -241,16 +250,22 @@ if column not in {"name", "category"}:
 ### Tests
 
 ```python
-def test_tautology_rejected():
+# tests/test_attacks.py
+def test_query_records_boolean_injection_no_leak():
     result = _query_records("' OR '1'='1")
-    assert "internal" not in result
+    assert "INTERNAL_TOKEN" not in result
 
-def test_union_injection_rejected():
-    result = _query_records("' UNION SELECT name, sql, null FROM sqlite_master --")
+
+def test_query_records_union_injection_no_schema_leak():
+    result = _query_records("' UNION SELECT name, sql, null, null FROM sqlite_master --")
     assert "CREATE TABLE" not in result
 
-def test_legitimate_query_succeeds():
-    assert "widget" in _query_records("tools")
+
+# tests/test_functional.py
+def test_query_records_public_returns_public_not_internal():
+    result = _query_records("public")
+    assert "Acme Landing Page" in result
+    assert "INTERNAL_TOKEN" not in result
 ```
 
 Note the assertion style: the hardened function does not raise on these inputs.
@@ -301,26 +316,38 @@ credentials.
 ### Defense
 
 ```python
-ALLOWED_HOSTS = {"docs.python.org", "example.com"}
+ALLOWED_HOSTS = frozenset({"example.com", "www.example.com"})
 MAX_REDIRECTS = 3
 
-def _validate(url: str) -> None:
+def _validate_fetch_url(url: str) -> None:
     parsed = urlparse(url)
     if parsed.scheme != "https":
-        raise ValueError("https only")
-    if parsed.hostname not in ALLOWED_HOSTS:
-        raise ValueError("host not permitted")
+        raise ValueError(f"scheme {parsed.scheme!r} not allowed; https only")
+    # .hostname is lowercased and strips userinfo/port, so
+    # "https://example.com@evil.tld" cannot masquerade as an allowed host.
+    host = parsed.hostname
+    if host is None or host.lower() not in ALLOWED_HOSTS:
+        raise ValueError(f"host {host!r} is not on the allowlist")
 
 def _fetch_doc(url: str) -> str:
-    for _ in range(MAX_REDIRECTS):
-        _validate(url)
-        resp = httpx.get(url, follow_redirects=False, timeout=5)
-        if resp.is_redirect:
-            url = str(resp.next_request.url)
-            continue
-        return resp.text[:100_000]
+    current = url
+    for _ in range(MAX_REDIRECTS + 1):
+        _validate_fetch_url(current)
+        response = httpx.get(current, follow_redirects=False, timeout=5)
+        if not response.is_redirect:
+            return response.text[:100_000]
+        location = response.headers.get("location")
+        if not location:
+            raise ValueError("redirect response is missing a location header")
+        current = urljoin(current, location)
     raise ValueError("too many redirects")
 ```
+
+The hop target comes from `urljoin` against the `Location` header rather than
+`response.next_request`. With a bare `httpx.get(follow_redirects=False)` that
+attribute is `None` — it is populated by the client's redirect machinery, which
+is exactly what this loop replaces. `urljoin` also resolves relative `Location`
+values correctly.
 
 **Why it holds:**
 
@@ -348,6 +375,35 @@ localhost. Mitigation requires resolving the hostname, validating the resulting
 IP against private ranges, and connecting to that IP directly — out of scope
 for this project and documented in
 [`OWASP-MCP-COVERAGE.md`](OWASP-MCP-COVERAGE.md) as residual risk.
+
+---
+
+## Audit logging — all four tools
+
+The three analyses above are per-tool. Auditing is the one control that spans
+all of them: an `@audit` decorator wraps every `@mcp.tool` function — including
+`ping`, the smoke test — and writes one JSON Lines entry per invocation to
+`logs/audit.jsonl`.
+
+It wraps the tool functions rather than the `_helpers`, because the log records
+*tool invocations*, and a direct helper call from a test is not one. The
+decorator catches, logs, and re-raises, so a rejection is recorded on its way
+out rather than swallowed — every attack in this document leaves a trace.
+
+Two properties worth naming here, since both are security claims rather than
+conveniences:
+
+- **Arguments are logged verbatim, and they are attacker-controlled.** For these
+  tools the argument *is* the payload — the traversal string is the thing worth
+  seeing. The consequence is that the log is untrusted input to whatever
+  consumes it.
+- **JSON Lines prevents log forgery.** `json.dumps` escapes newlines, so an
+  argument containing `\n` cannot fabricate a second entry claiming a different
+  tool succeeded. A plaintext format would have been forgeable.
+
+Field reference and the fail-open tradeoff are in the
+[README](../README.md#audit-logging); residual risk is in
+[`OWASP-MCP-COVERAGE.md`](OWASP-MCP-COVERAGE.md).
 
 ---
 

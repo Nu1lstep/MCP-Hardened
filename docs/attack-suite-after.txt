@@ -4,18 +4,23 @@ cachedir: .pytest_cache
 rootdir: /home/nullstep/mcp-hardened
 configfile: pyproject.toml
 plugins: anyio-4.14.2
-collecting ... collected 11 items
+collecting ... collected 16 items
 
-tests/test_attacks.py::test_search_files_relative_traversal_rejected PASSED [  9%]
-tests/test_attacks.py::test_search_files_absolute_path_rejected PASSED   [ 18%]
-tests/test_attacks.py::test_query_records_boolean_injection_no_leak PASSED [ 27%]
-tests/test_attacks.py::test_query_records_union_injection_no_schema_leak PASSED [ 36%]
-tests/test_attacks.py::test_fetch_doc_link_local_metadata_rejected PASSED [ 45%]
-tests/test_attacks.py::test_fetch_doc_non_https_scheme_rejected PASSED   [ 54%]
-tests/test_attacks.py::test_fetch_doc_disallowed_host_rejected PASSED    [ 63%]
-tests/test_attacks.py::test_fetch_doc_redirect_to_metadata_rejected PASSED [ 72%]
-tests/test_functional.py::test_search_files_reads_note PASSED            [ 81%]
-tests/test_functional.py::test_query_records_public_returns_public_not_internal PASSED [ 90%]
+tests/test_attacks.py::test_search_files_relative_traversal_rejected PASSED [  6%]
+tests/test_attacks.py::test_search_files_absolute_path_rejected PASSED   [ 12%]
+tests/test_attacks.py::test_query_records_boolean_injection_no_leak PASSED [ 18%]
+tests/test_attacks.py::test_query_records_union_injection_no_schema_leak PASSED [ 25%]
+tests/test_attacks.py::test_fetch_doc_link_local_metadata_rejected PASSED [ 31%]
+tests/test_attacks.py::test_fetch_doc_non_https_scheme_rejected PASSED   [ 37%]
+tests/test_attacks.py::test_fetch_doc_disallowed_host_rejected PASSED    [ 43%]
+tests/test_attacks.py::test_fetch_doc_redirect_to_metadata_rejected PASSED [ 50%]
+tests/test_audit.py::test_successful_call_appends_ok_entry PASSED        [ 56%]
+tests/test_audit.py::test_rejected_call_appends_rejected_entry_with_error PASSED [ 62%]
+tests/test_audit.py::test_every_line_is_valid_json PASSED                [ 68%]
+tests/test_audit.py::test_entries_carry_timestamp_and_tool_name PASSED   [ 75%]
+tests/test_audit.py::test_newline_in_argument_cannot_forge_an_entry PASSED [ 81%]
+tests/test_functional.py::test_search_files_reads_note PASSED            [ 87%]
+tests/test_functional.py::test_query_records_public_returns_public_not_internal PASSED [ 93%]
 tests/test_functional.py::test_fetch_doc_allowlisted_host_returns_body PASSED [100%]
 
-============================== 11 passed in 2.69s ==============================
+============================== 16 passed in 3.76s ==============================

@@ -17,7 +17,8 @@ Ongoing project. Things may change.
 
 ## What this demonstrates
 
-Three read-only tools, each hosting one vulnerability class:
+Three read-only tools, each hosting one vulnerability class (plus `ping`, a
+smoke test):
 
 | Tool | Vulnerability class | Defense |
 |---|---|---|
@@ -25,12 +26,35 @@ Three read-only tools, each hosting one vulnerability class:
 | `query_records` | SQL injection | Parameterized queries only |
 | `fetch_doc` | SSRF | Host allowlist, revalidated after redirects |
 
-Every tool call is written to an audit log as JSON Lines — timestamp, tool,
-arguments, and outcome, with rejections recording their reason. Return values
-are never logged, only their length. The log goes to a file rather than stdout,
-which under stdio transport carries JSON-RPC.
-
 Full breakdown of each tool in [docs/TOOLS.md](docs/TOOLS.md).
+
+## Audit logging
+
+Every tool invocation is written to `logs/audit.jsonl` as one JSON object per
+line:
+
+```json
+{"timestamp": "...", "tool": "search_files", "arguments": {"query": "../OUTSIDE_SANDBOX.txt"}, "outcome": "rejected", "error": "path escapes the sandbox root"}
+```
+
+Fields: `timestamp` (ISO 8601 UTC), `tool`, `arguments` as received, `outcome`
+(`ok` or `rejected`), `error` on rejection, `result_len` on success.
+
+Return values are never logged — only their length. Logging content would
+reintroduce the over-sharing problem MCP10 addresses.
+
+JSON Lines is not just convenient. `json.dumps` escapes newlines, so an argument
+containing `\n` cannot forge a second log entry. A plaintext format would have
+been forgeable. `tests/test_audit.py` enforces this.
+
+The log contains attacker-controlled text by design — that is the point of an
+audit log — so anything consuming it must treat it as untrusted input.
+
+Writes fail open: if the log cannot be written the tool call still succeeds,
+with the failure reported on stderr. A compliance context would invert this. See
+residual risk in the [coverage doc](docs/OWASP-MCP-COVERAGE.md).
+
+The log is gitignored — it is generated data, like `data/*.db`.
 
 ## Before and after
 
@@ -87,6 +111,50 @@ To poke at the tools by hand:
 ```bash
 npx @modelcontextprotocol/inspector uv run src/server.py
 ```
+
+### Claude Desktop
+
+Add to `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "hardened-demo": {
+      "command": "wsl.exe",
+      "args": [
+        "-d", "Ubuntu",
+        "--",
+        "/home/nullstep/.local/bin/uv",
+        "run",
+        "--directory", "/home/nullstep/mcp-hardened",
+        "src/server.py"
+      ]
+    }
+  }
+}
+```
+
+Config location: `%APPDATA%\Claude\claude_desktop_config.json` on Windows,
+`~/Library/Application Support/Claude/` on macOS. Microsoft Store installs
+redirect this into the package container under
+`%LOCALAPPDATA%\Packages\Claude_*\LocalCache\Roaming\Claude\`.
+
+Two non-obvious requirements when the server runs in WSL:
+
+- **`uv` needs an absolute path.** `wsl.exe -- <cmd>` does not run a login
+  shell, so `~/.local/bin` is never added to PATH. A bare `uv` fails with
+  exit 127.
+- **`--directory` is required.** `wsl.exe` inherits and translates the Windows
+  working directory, so the process starts in `/mnt/c/Windows/System32` and
+  relative paths do not resolve.
+
+Restart Claude Desktop fully after editing — quit from the system tray, not just
+closing the window.
+
+Note: `ROOT = Path(__file__).resolve().parent.parent` in `src/server.py` means
+the sandbox, database, and log paths resolve correctly regardless of working
+directory. `--directory` and `ROOT` are independent layers — the config could be
+wrong and containment would still hold.
 
 ## Attribution
 
