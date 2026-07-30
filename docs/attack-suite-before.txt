@@ -1,0 +1,168 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.6.0 -- /home/nullstep/mcp-hardened/.venv/bin/python3
+cachedir: .pytest_cache
+rootdir: /home/nullstep/mcp-hardened
+configfile: pyproject.toml
+plugins: anyio-4.14.2
+collecting ... collected 11 items
+
+tests/test_attacks.py::test_search_files_relative_traversal_rejected FAILED [  9%]
+tests/test_attacks.py::test_search_files_absolute_path_rejected FAILED   [ 18%]
+tests/test_attacks.py::test_query_records_boolean_injection_no_leak FAILED [ 27%]
+tests/test_attacks.py::test_query_records_union_injection_no_schema_leak FAILED [ 36%]
+tests/test_attacks.py::test_fetch_doc_link_local_metadata_rejected FAILED [ 45%]
+tests/test_attacks.py::test_fetch_doc_non_https_scheme_rejected FAILED   [ 54%]
+tests/test_attacks.py::test_fetch_doc_disallowed_host_rejected FAILED    [ 63%]
+tests/test_attacks.py::test_fetch_doc_redirect_to_metadata_rejected FAILED [ 72%]
+tests/test_functional.py::test_search_files_reads_note PASSED            [ 81%]
+tests/test_functional.py::test_query_records_public_returns_public_not_internal PASSED [ 90%]
+tests/test_functional.py::test_fetch_doc_allowlisted_host_returns_body PASSED [100%]
+
+=================================== FAILURES ===================================
+________________ test_search_files_relative_traversal_rejected _________________
+
+    def test_search_files_relative_traversal_rejected():
+        """Path traversal: a relative ../ escape out of the sandbox must be rejected."""
+>       with pytest.raises(ValueError):
+E       Failed: DID NOT RAISE ValueError
+
+tests/test_attacks.py:18: Failed
+___________________ test_search_files_absolute_path_rejected ___________________
+
+    def test_search_files_absolute_path_rejected():
+        """Path traversal: an absolute path that discards the sandbox prefix must be rejected."""
+>       with pytest.raises(ValueError):
+E       Failed: DID NOT RAISE ValueError
+
+tests/test_attacks.py:24: Failed
+_________________ test_query_records_boolean_injection_no_leak _________________
+
+    def test_query_records_boolean_injection_no_leak():
+        """SQL injection: a boolean tautology must not leak rows outside the requested category."""
+        result = _query_records("' OR '1'='1")
+>       assert "INTERNAL_TOKEN" not in result
+E       AssertionError: assert 'INTERNAL_TOKEN' not in '[1] Acme La...se-seed-data'
+E         
+E         'INTERNAL_TOKEN' is contained here:
+E           [1] Acme Landing Page (public): Marketing copy for the homepage.
+E           [2] Pricing Page (public): Three tiers: starter, pro, enterprise.
+E           [3] Blog: Getting Started (public): Intro tutorial for new users.
+E           [4] API Reference (docs): Endpoint list and example requests.
+E           [5] Onboarding Guide (docs): Step-by-step setup instructions....
+E         
+E         ...Full output truncated (5 lines hidden), use '-vv' to show
+
+tests/test_attacks.py:34: AssertionError
+______________ test_query_records_union_injection_no_schema_leak _______________
+
+    def test_query_records_union_injection_no_schema_leak():
+        """SQL injection: a UNION SELECT against sqlite_master must not leak the schema."""
+        result = _query_records("' UNION SELECT name, sql, null, null FROM sqlite_master --")
+>       assert "CREATE TABLE" not in result
+E       AssertionError: assert 'CREATE TABLE' not in '[records] C...(None): None'
+E         
+E         'CREATE TABLE' is contained here:
+E           [records] CREATE TABLE records (id INTEGER PRIMARY KEY, name TEXT, category TEXT, note TEXT) (None): None
+E         ?           ++++++++++++
+
+tests/test_attacks.py:40: AssertionError
+_________________ test_fetch_doc_link_local_metadata_rejected __________________
+
+no_network = <function no_network.<locals>.boom at 0x79ee09bee840>
+
+    def test_fetch_doc_link_local_metadata_rejected(no_network):
+        """SSRF: a request to the link-local cloud metadata address must be rejected before any request."""
+        with pytest.raises(ValueError):
+>           _fetch_doc("http://169.254.169.254/latest/meta-data/")
+
+tests/test_attacks.py:60: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/server.py:47: in _fetch_doc
+    response = httpx.get(url, follow_redirects=True)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = ('http://169.254.169.254/latest/meta-data/',)
+kwargs = {'follow_redirects': True}
+
+    def boom(*args, **kwargs):
+>       raise RuntimeError("network call attempted; URL should have been rejected before request")
+E       RuntimeError: network call attempted; URL should have been rejected before request
+
+tests/test_attacks.py:51: RuntimeError
+___________________ test_fetch_doc_non_https_scheme_rejected ___________________
+
+no_network = <function no_network.<locals>.boom at 0x79ee09bee980>
+
+    def test_fetch_doc_non_https_scheme_rejected(no_network):
+        """SSRF: a non-https scheme must be rejected before any request."""
+        with pytest.raises(ValueError):
+>           _fetch_doc("http://example.com")
+
+tests/test_attacks.py:66: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/server.py:47: in _fetch_doc
+    response = httpx.get(url, follow_redirects=True)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = ('http://example.com',), kwargs = {'follow_redirects': True}
+
+    def boom(*args, **kwargs):
+>       raise RuntimeError("network call attempted; URL should have been rejected before request")
+E       RuntimeError: network call attempted; URL should have been rejected before request
+
+tests/test_attacks.py:51: RuntimeError
+___________________ test_fetch_doc_disallowed_host_rejected ____________________
+
+no_network = <function no_network.<locals>.boom at 0x79ee09beed40>
+
+    def test_fetch_doc_disallowed_host_rejected(no_network):
+        """SSRF: a host that is not on the allowlist must be rejected before any request."""
+        with pytest.raises(ValueError):
+>           _fetch_doc("https://not-on-the-allowlist.example.net")
+
+tests/test_attacks.py:72: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/server.py:47: in _fetch_doc
+    response = httpx.get(url, follow_redirects=True)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+args = ('https://not-on-the-allowlist.example.net',)
+kwargs = {'follow_redirects': True}
+
+    def boom(*args, **kwargs):
+>       raise RuntimeError("network call attempted; URL should have been rejected before request")
+E       RuntimeError: network call attempted; URL should have been rejected before request
+
+tests/test_attacks.py:51: RuntimeError
+_________________ test_fetch_doc_redirect_to_metadata_rejected _________________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x79ee09bb0bf0>
+
+    def test_fetch_doc_redirect_to_metadata_rejected(monkeypatch):
+        """SSRF: a redirect hop to a link-local address must be validated per-hop and rejected."""
+    
+        def fake_get(url, **kwargs):
+            return httpx.Response(
+                status_code=302,
+                headers={"location": "http://169.254.169.254/"},
+                request=httpx.Request("GET", url),
+            )
+    
+        monkeypatch.setattr(httpx, "get", fake_get)
+>       with pytest.raises(ValueError):
+E       Failed: DID NOT RAISE ValueError
+
+tests/test_attacks.py:86: Failed
+=========================== short test summary info ============================
+FAILED tests/test_attacks.py::test_search_files_relative_traversal_rejected
+FAILED tests/test_attacks.py::test_search_files_absolute_path_rejected - Fail...
+FAILED tests/test_attacks.py::test_query_records_boolean_injection_no_leak - ...
+FAILED tests/test_attacks.py::test_query_records_union_injection_no_schema_leak
+FAILED tests/test_attacks.py::test_fetch_doc_link_local_metadata_rejected - R...
+FAILED tests/test_attacks.py::test_fetch_doc_non_https_scheme_rejected - Runt...
+FAILED tests/test_attacks.py::test_fetch_doc_disallowed_host_rejected - Runti...
+FAILED tests/test_attacks.py::test_fetch_doc_redirect_to_metadata_rejected - ...
+========================= 8 failed, 3 passed in 2.52s ==========================
