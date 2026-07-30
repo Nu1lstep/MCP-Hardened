@@ -346,7 +346,8 @@ actually issued has been checked.**
 resolve it to `127.0.0.1`. The hostname check passes; the connection reaches
 localhost. Mitigation requires resolving the hostname, validating the resulting
 IP against private ranges, and connecting to that IP directly — out of scope
-for this project and documented in `THREAT_MODEL.md` as residual risk.
+for this project and documented in
+[`OWASP-MCP-COVERAGE.md`](OWASP-MCP-COVERAGE.md) as residual risk.
 
 ---
 

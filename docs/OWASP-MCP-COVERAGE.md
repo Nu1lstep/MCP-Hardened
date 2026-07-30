@@ -24,12 +24,12 @@ reasoning behind the items it does not address.
 | MCP05 | Command injection | Addressed — the focus of this project |
 | MCP06 | Intent flow subversion | Not addressable at the server layer |
 | MCP07 | Insufficient authentication / authorization | Out of scope for this architecture |
-| MCP08 | Lack of audit and telemetry | Planned |
+| MCP08 | Lack of audit and telemetry | Designed, not implemented |
 | MCP09 | Shadow servers | Not addressable at the server layer |
 | MCP10 | Context injection / over-sharing | Addressed |
 
-Four addressed, one planned, one partial, one out of scope for this
-architecture, and three that sit outside a server's control boundary.
+Four addressed, one designed but not built, one partial, one out of scope for
+this architecture, and three that sit outside a server's control boundary.
 
 ---
 
@@ -124,18 +124,18 @@ begin disclosing a new field.
 
 ---
 
-## Planned
+## Designed, not implemented
 
 ### MCP08 — Lack of audit and telemetry
 
 **Threat.** No record of which tool was invoked with which arguments, so an
 incident cannot be reconstructed.
 
-**Planned implementation.** Every tool invocation logged with timestamp, tool
+**Design.** Every tool invocation logged with timestamp, tool
 name, and the arguments received. Rejections logged with the reason, so a
 blocked traversal attempt is visible rather than silent.
 
-The log will be a local file writable by the same user that runs the server,
+The log would be a local file writable by the same user that runs the server,
 which is a meaningful limitation — noted under residual risk.
 
 ---
@@ -254,7 +254,7 @@ declarative metadata. A client may ignore them, and a malicious server may
 declare them falsely. They inform client behavior rather than enforcing
 anything.
 
-**The audit log will not be tamper-evident.** A local file writable by the same
+**The audit log would not be tamper-evident.** A local file writable by the same
 user that runs the server can be edited by anyone with that user's permissions.
 Tamper-evidence would require append-only storage or remote shipping.
 
