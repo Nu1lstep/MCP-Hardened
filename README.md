@@ -25,6 +25,11 @@ Three read-only tools, each hosting one vulnerability class:
 | `query_records` | SQL injection | Parameterized queries only |
 | `fetch_doc` | SSRF | Host allowlist, revalidated after redirects |
 
+Every tool call is written to an audit log as JSON Lines — timestamp, tool,
+arguments, and outcome, with rejections recording their reason. Return values
+are never logged, only their length. The log goes to a file rather than stdout,
+which under stdio transport carries JSON-RPC.
+
 Full breakdown of each tool in [docs/TOOLS.md](docs/TOOLS.md).
 
 ## Before and after
@@ -59,7 +64,7 @@ The hardening itself, as a diff:
 | MCP05 | Command injection | Addressed — the focus of this project |
 | MCP06 | Intent flow subversion | Not addressable at the server layer |
 | MCP07 | Insufficient authentication / authorization | Out of scope for this architecture |
-| MCP08 | Lack of audit and telemetry | Designed, not implemented |
+| MCP08 | Lack of audit and telemetry | Addressed |
 | MCP09 | Shadow servers | Not addressable at the server layer |
 | MCP10 | Context injection / over-sharing | Addressed |
 

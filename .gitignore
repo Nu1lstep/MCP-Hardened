@@ -11,3 +11,6 @@ wheels/
 
 # Generated data (rebuild with: uv run scripts/seed_db.py)
 data/*.db
+
+# Audit log
+logs/

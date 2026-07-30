@@ -24,12 +24,12 @@ reasoning behind the items it does not address.
 | MCP05 | Command injection | Addressed — the focus of this project |
 | MCP06 | Intent flow subversion | Not addressable at the server layer |
 | MCP07 | Insufficient authentication / authorization | Out of scope for this architecture |
-| MCP08 | Lack of audit and telemetry | Designed, not implemented |
+| MCP08 | Lack of audit and telemetry | Addressed |
 | MCP09 | Shadow servers | Not addressable at the server layer |
 | MCP10 | Context injection / over-sharing | Addressed |
 
-Four addressed, one designed but not built, one partial, one out of scope for
-this architecture, and three that sit outside a server's control boundary.
+Five addressed, one partial, one out of scope for this architecture, and three
+that sit outside a server's control boundary.
 
 ---
 
@@ -108,6 +108,39 @@ request, and do so after any transformation that could change the answer. A
 path is checked after resolution, not before. A URL is checked at every
 redirect hop, not once on the URL supplied.
 
+### MCP08 — Lack of audit and telemetry
+
+**Threat.** No record of which tool was invoked with which arguments, so an
+incident cannot be reconstructed.
+
+**This server.** Every tool invocation is written to `logs/audit.jsonl` as JSON
+Lines: timestamp, tool name, and the arguments received. Rejections record the
+reason, so a blocked traversal attempt is visible rather than silent. An `audit`
+decorator wraps the tool functions, catches, logs, and re-raises — a rejection
+is recorded on its way out rather than being swallowed.
+
+Return values are never logged, only their length. A successful `search_files`
+can return 100KB, and recording content would reintroduce the over-sharing
+problem MCP10 addresses.
+
+**JSON Lines is itself the log-injection defense.** `json.dumps` escapes
+newlines, so an argument containing `\n` cannot forge a second log entry. A
+plaintext format would have been forgeable — an attacker-supplied argument could
+have written a fabricated line claiming a different tool succeeded. The format
+choice is a security property, not a convenience.
+
+Arguments are logged verbatim, including hostile ones — for these tools the
+argument *is* the attack payload, which is the thing worth seeing. The
+consequence is that the log contains attacker-controlled text, and anything
+consuming it must treat those fields as untrusted input rather than as
+trustworthy record.
+
+The log is written by direct file append rather than through the `logging`
+module. Under stdio transport stdout carries JSON-RPC, and any library calling
+`logging.basicConfig()` can attach a stdout `StreamHandler` to the root logger,
+which propagation would then use to corrupt the protocol. A direct append has no
+global state to hijack.
+
 ### MCP10 — Context injection / over-sharing
 
 **Threat.** A tool returns more data than the caller needs, and it enters model
@@ -121,22 +154,6 @@ though nothing was attacked.
 
 Explicit column selection also means a future schema addition does not silently
 begin disclosing a new field.
-
----
-
-## Designed, not implemented
-
-### MCP08 — Lack of audit and telemetry
-
-**Threat.** No record of which tool was invoked with which arguments, so an
-incident cannot be reconstructed.
-
-**Design.** Every tool invocation logged with timestamp, tool
-name, and the arguments received. Rejections logged with the reason, so a
-blocked traversal attempt is visible rather than silent.
-
-The log would be a local file writable by the same user that runs the server,
-which is a meaningful limitation — noted under residual risk.
 
 ---
 
@@ -254,9 +271,23 @@ declarative metadata. A client may ignore them, and a malicious server may
 declare them falsely. They inform client behavior rather than enforcing
 anything.
 
-**The audit log would not be tamper-evident.** A local file writable by the same
+**The audit log is not tamper-evident.** A local file writable by the same
 user that runs the server can be edited by anyone with that user's permissions.
 Tamper-evidence would require append-only storage or remote shipping.
+
+**Audit writes fail open.** If the log cannot be written — full disk, bad
+permissions — the entry is lost and the tool call proceeds anyway. The failure
+goes to stderr, which is safe under stdio transport because only stdout carries
+protocol traffic, so a client capturing stderr surfaces the problem rather than
+losing it silently. A compliance context would invert this choice: fail closed,
+refusing the call if it cannot be recorded, on the grounds that an unrecorded
+action is worse than no action. Availability is the right pick for a local
+single-user teaching artifact. The point is that the tradeoff was chosen
+deliberately rather than inherited by accident.
+
+**The audit log grows without bound.** There is no rotation, size cap, or
+retention policy — a long-running server fills the disk eventually. Rotation is
+out of scope here, but the gap is real rather than overlooked.
 
 **DNS rebinding defeats the host allowlist.** An attacker controlling DNS for
 an allowlisted host can resolve it to a private address. The hostname check
