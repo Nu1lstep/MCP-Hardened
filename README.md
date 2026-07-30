@@ -14,8 +14,7 @@ against the OWASP MCP Top 10, with a test suite that proves the defenses hold.
 > SSRF **on purpose** — they are the "before" half of a security demonstration.
 > The build order is deliberate: write the naive version, write attack tests
 > that prove the vulnerability is reachable, then harden until the tests pass.
-> A security test that has never failed is not a test. Do not use any code from
-> this repository as a reference implementation, and do not deploy it. This is
+> Do not use any code from this repository as a reference implementation, and do not deploy it. This is
 > a teaching artifact, not a library.
 
 ## Planned scope
