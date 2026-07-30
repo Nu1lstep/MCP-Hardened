@@ -68,7 +68,7 @@ E         ?           ++++++++++++
 tests/test_attacks.py:40: AssertionError
 _________________ test_fetch_doc_link_local_metadata_rejected __________________
 
-no_network = <function no_network.<locals>.boom at 0x79ee09bee840>
+no_network = <function no_network.<locals>.boom at 0x76c3e55da7a0>
 
     def test_fetch_doc_link_local_metadata_rejected(no_network):
         """SSRF: a request to the link-local cloud metadata address must be rejected before any request."""
@@ -92,7 +92,7 @@ E       RuntimeError: network call attempted; URL should have been rejected befo
 tests/test_attacks.py:51: RuntimeError
 ___________________ test_fetch_doc_non_https_scheme_rejected ___________________
 
-no_network = <function no_network.<locals>.boom at 0x79ee09bee980>
+no_network = <function no_network.<locals>.boom at 0x76c3e55da8e0>
 
     def test_fetch_doc_non_https_scheme_rejected(no_network):
         """SSRF: a non-https scheme must be rejected before any request."""
@@ -115,7 +115,7 @@ E       RuntimeError: network call attempted; URL should have been rejected befo
 tests/test_attacks.py:51: RuntimeError
 ___________________ test_fetch_doc_disallowed_host_rejected ____________________
 
-no_network = <function no_network.<locals>.boom at 0x79ee09beed40>
+no_network = <function no_network.<locals>.boom at 0x76c3e55daca0>
 
     def test_fetch_doc_disallowed_host_rejected(no_network):
         """SSRF: a host that is not on the allowlist must be rejected before any request."""
@@ -139,7 +139,7 @@ E       RuntimeError: network call attempted; URL should have been rejected befo
 tests/test_attacks.py:51: RuntimeError
 _________________ test_fetch_doc_redirect_to_metadata_rejected _________________
 
-monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x79ee09bb0bf0>
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x76c3e55a8c80>
 
     def test_fetch_doc_redirect_to_metadata_rejected(monkeypatch):
         """SSRF: a redirect hop to a link-local address must be validated per-hop and rejected."""
@@ -165,4 +165,4 @@ FAILED tests/test_attacks.py::test_fetch_doc_link_local_metadata_rejected - R...
 FAILED tests/test_attacks.py::test_fetch_doc_non_https_scheme_rejected - Runt...
 FAILED tests/test_attacks.py::test_fetch_doc_disallowed_host_rejected - Runti...
 FAILED tests/test_attacks.py::test_fetch_doc_redirect_to_metadata_rejected - ...
-========================= 8 failed, 3 passed in 2.52s ==========================
+========================= 8 failed, 3 passed in 3.62s ==========================
