@@ -5,7 +5,10 @@ against the OWASP MCP Top 10, with a test suite that proves the defenses hold.
 
 ## Status
 
-**In progress.** Stage 3 of 7. Three tools built, intentionally vulnerable. Attack tests next.
+**In progress.** Stage 4 of 7. Three tools built and intentionally vulnerable;
+attack suite written and failing against them by design — 8 attack tests red,
+3 functional tests green. See docs/attack-suite-before.txt for the baseline run.
+Hardening next.
 
 ## Warning
 
