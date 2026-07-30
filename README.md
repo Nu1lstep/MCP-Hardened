@@ -51,7 +51,7 @@ Plus audit logging of every tool call and its arguments.
 | MCP09 | Shadow servers | Not addressable at the server layer |
 | MCP10 | Context injection / over-sharing | Addressed |
 
-Full reasoning per item in [docs/OWASP-MCP-COVERAGE.md](docs/OWASP-MCP-COVERAGE.md).
+Full reasoning per item in [OWASP-MCP-COVERAGE.md](https://github.com/Nu1lstep/MCP-Hardened/blob/master/docs/OWASP-MCP-COVERAGE.md)
 
 ## Stack
 
