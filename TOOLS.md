@@ -1,5 +1,10 @@
 # Tool security analysis
 
+> **Status:** the hardened implementations described here have not landed yet.
+> The repository is currently at the naive stage — the vulnerabilities are real
+> and the defenses below are the plan, not the code. This document will be
+> accurate as of the hardening commits.
+
 Per-tool breakdown of what each tool does, how it fails, and what stops it.
 
 Three tools, three vulnerability classes, **one underlying bug**:
