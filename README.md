@@ -5,7 +5,7 @@ against the OWASP MCP Top 10, with a test suite that proves the defenses hold.
 
 ## Status
 
-**In progress.** Stage 3 of 7 - 3 working tools that are vulnerable to exploitation on purpose.
+**In progress.** Stage 3 of 7. Three tools built, intentionally vulnerable. Attack tests next.
 
 ## Warning
 
