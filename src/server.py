@@ -13,6 +13,8 @@ DB_PATH = ROOT / "data" / "records.db"
 
 MAX_FILE_BYTES = 100_000
 
+# Illustrative allowlist for the demo — replace with real documentation
+# hosts before any actual use.
 ALLOWED_HOSTS = frozenset({"example.com", "www.example.com"})
 MAX_REDIRECTS = 3
 FETCH_TIMEOUT_SECONDS = 5.0
@@ -75,6 +77,9 @@ def _query_records(filter: str) -> str:
     )
 
 
+# Host allowlist validates the hostname, not the resolved IP. An allowlisted
+# name whose DNS points at a private or link-local address passes this check.
+# Documented as out of scope — see docs/OWASP-MCP-COVERAGE.md, residual risk.
 def _validate_fetch_url(url: str) -> None:
     """Reject a URL before it is ever requested. Applied to every redirect hop."""
     parsed = urlparse(url)
