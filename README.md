@@ -36,6 +36,23 @@ Plus audit logging of every tool call and its arguments.
   from connecting to a poisoned server
 - Multi-user authentication, rate limiting
 
+## OWASP MCP Top 10 coverage
+
+| ID | Item | Status |
+|---|---|---|
+| MCP01 | Token mismanagement / secret exposure | Addressed |
+| MCP02 | Privilege escalation via scope creep | Addressed |
+| MCP03 | Tool poisoning | Not addressable at the server layer |
+| MCP04 | Supply chain | Partially addressed |
+| MCP05 | Command injection | Addressed — the focus of this project |
+| MCP06 | Intent flow subversion | Not addressable at the server layer |
+| MCP07 | Insufficient authentication / authorization | Out of scope for this architecture |
+| MCP08 | Lack of audit and telemetry | Planned |
+| MCP09 | Shadow servers | Not addressable at the server layer |
+| MCP10 | Context injection / over-sharing | Addressed |
+
+Full reasoning per item in [docs/OWASP-MCP-COVERAGE.md](docs/OWASP-MCP-COVERAGE.md).
+
 ## Stack
 
 Python 3.12 · FastMCP 3.3.1 · pytest · stdio transport
